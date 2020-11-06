@@ -16,7 +16,7 @@ namespace CM_Launcher
         public static readonly string LauncherFolder = AppDomain.CurrentDomain.BaseDirectory;
 
         private readonly string VersionFilename;
-        private readonly Form1 form;
+        private readonly Updater form;
 
         private readonly ReleaseChannel useChannel = ReleaseChannel.Stable;
 
@@ -47,7 +47,7 @@ namespace CM_Launcher
         [DllImport("shell32.dll")]
         static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, IntPtr hToken, out IntPtr pszPath);
 
-        public Main(Form1 form)
+        public Main(Updater form)
         {
             this.form = form;
             VersionFilename = Path.Combine(LauncherFolder, "cm-version");

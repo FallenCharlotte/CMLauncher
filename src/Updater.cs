@@ -13,12 +13,12 @@ using System.Xml;
 
 namespace CM_Launcher
 {
-    public partial class Form1 : Form, IProgress<float>
+    public partial class Updater : Form, IProgress<float>
     {
         private readonly SynchronizationContext synchronizationContext;
         private string VersionFilename;
 
-        public Form1()
+        public Updater()
         {
             InitializeComponent();
             synchronizationContext = SynchronizationContext.Current;
