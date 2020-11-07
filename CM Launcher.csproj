@@ -115,6 +115,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\BinaryPatchUtility.cs" />
+    <Compile Include="src\Version.cs" />
     <Compile Include="src\Main.cs" />
     <Compile Include="src\SimpleJSON.cs" />
     <Compile Include="src\TempFile.cs" />

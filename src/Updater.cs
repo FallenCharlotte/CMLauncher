@@ -17,7 +17,6 @@ namespace CM_Launcher
     public partial class Updater : Form, IProgress<float>
     {
         private readonly SynchronizationContext synchronizationContext;
-        private string VersionFilename;
 
         public Updater()
         {
@@ -28,10 +27,9 @@ namespace CM_Launcher
             new Main(this);
         }
 
-        public void Show(string versionFilename, int current, int desired)
+        public void Show(int current, int desired)
         {
             Show();
-            VersionFilename = versionFilename;
 
             new Thread(() =>
             {
@@ -186,7 +184,7 @@ namespace CM_Launcher
 
         private void SetVersion(int version)
         {
-            File.WriteAllText(VersionFilename, $"{version}");
+            Version.GetVersion().Update(version, Main.CDN_URL);
         }
 
         private async Task<List<int>> FindPath(int current, int desired)
@@ -248,8 +246,9 @@ namespace CM_Launcher
         private async void DoUpdate(int current, int desired)
         {
             int stable = await Main.GetLatestBuildNumber(ReleaseChannel.Stable);
+            var version = Version.GetVersion();
 
-            if (current == 0 || current > desired)
+            if (version.VersionServer != Main.CDN_URL || current > desired)
             {
                 current = await UpdateUsingZip(stable);
             }

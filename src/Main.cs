@@ -15,17 +15,9 @@ namespace CM_Launcher
         public static string CDN_URL = "https://cm.topc.at";
         public static readonly string LauncherFolder = AppDomain.CurrentDomain.BaseDirectory;
 
-        private readonly string VersionFilename;
         private readonly Updater form;
 
         private readonly ReleaseChannel useChannel = ReleaseChannel.Stable;
-
-        private int GetVersion()
-        {
-            if (!File.Exists(VersionFilename)) return 0;
-
-            return int.Parse(File.ReadAllText(VersionFilename));
-        }
 
         string GetKnownFolderPath(Guid knownFolderId)
         {
@@ -50,7 +42,6 @@ namespace CM_Launcher
         public Main(Updater form)
         {
             this.form = form;
-            VersionFilename = Path.Combine(LauncherFolder, "cm-version");
 
             Guid localLowId = new Guid("A520A1A4-1780-4FF6-BD18-167343C5AF16");
             string cmSettingsPath = Path.Combine(GetKnownFolderPath(localLowId), "BinaryElement", "ChroMapper", "ChroMapperSettings.json");
@@ -59,6 +50,10 @@ namespace CM_Launcher
             {
                 JSONNode mainNode = JSON.Parse(reader.ReadToEnd());
                 useChannel = mainNode["ReleaseChannel"].Value == "0" ? ReleaseChannel.Stable : ReleaseChannel.Dev;
+                if (mainNode.HasKey("ReleaseServer"))
+                {
+                    CDN_URL = mainNode["ReleaseServer"].Value;
+                }
             }
 
             DoUpdate();
@@ -84,12 +79,19 @@ namespace CM_Launcher
         {
             try
             {
-                int current = GetVersion();
+                Version version = Version.GetVersion();
+                int current = version.VersionNumber;
                 int desired = await GetLatestBuildNumber(useChannel);
 
-                if (current == 0 || current < desired || (current > desired && useChannel == ReleaseChannel.Stable))
+                /**
+                 * Update if:
+                 *  - Our version server does not match (possibly because we have no current version)
+                 *  - We have an old version
+                 *  - We have a newer version but we want to be on the stable build
+                 */
+                if (version.VersionServer != CDN_URL || current < desired || (current > desired && useChannel == ReleaseChannel.Stable))
                 {
-                    form.Show(VersionFilename, current, desired);
+                    form.Show(current, desired);
                     return;
                 }
             }
