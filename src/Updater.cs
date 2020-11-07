@@ -22,19 +22,16 @@ namespace CM_Launcher
         {
             InitializeComponent();
             synchronizationContext = SynchronizationContext.Current;
-            Hide();
 
-            new Main(this);
+            new Thread(() =>
+            {
+                new Main(this);
+            }).Start();
         }
 
         public void Show(int current, int desired)
         {
-            Show();
-
-            new Thread(() =>
-            {
-                DoUpdate(current, desired);
-            }).Start();
+            DoUpdate(current, desired);
         }
 
         private void UpdateLabel(string text)

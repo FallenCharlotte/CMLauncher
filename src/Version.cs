@@ -21,14 +21,14 @@ namespace CM_Launcher
 
         private Version()
         {
-            string VersionFilename = Path.Combine(Main.LauncherFolder, "cm-version");
+            VersionFilename = Path.Combine(Main.LauncherFolder, "cm-version");
 
             if (File.Exists(VersionFilename))
             {
                 string[] versionInfo = File.ReadAllText(VersionFilename).Split('\n');
                 VersionNumber = int.Parse(versionInfo[0]);
 
-                if (versionInfo.Length > 0)
+                if (versionInfo.Length > 1)
                     VersionServer = versionInfo[1];
             }
         }
