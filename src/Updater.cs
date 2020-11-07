@@ -208,9 +208,12 @@ namespace CM_Launcher
                             xReader.ReadToFollowing("Key");
                             var str = xReader.ReadElementContentAsString();
                             var matches = regex.Matches(str);
-                            
-                            int possible = int.Parse(matches[0].Groups[1].Value);
-                            patches.Add(possible);
+
+                            if (matches.Count > 0)
+                            {
+                                int possible = int.Parse(matches[0].Groups[1].Value);
+                                patches.Add(possible);
+                            }
                         }
                     }
                 }
