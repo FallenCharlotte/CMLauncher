@@ -82,14 +82,18 @@ namespace CM_Launcher
 
         private async void DoUpdate()
         {
-            int current = GetVersion();
-            int desired = await GetLatestBuildNumber(useChannel);
-
-            if (current == 0 || current < desired || (current > desired && useChannel == ReleaseChannel.Stable))
+            try
             {
-                form.Show(VersionFilename, current, desired);
-                return;
+                int current = GetVersion();
+                int desired = await GetLatestBuildNumber(useChannel);
+
+                if (current == 0 || current < desired || (current > desired && useChannel == ReleaseChannel.Stable))
+                {
+                    form.Show(VersionFilename, current, desired);
+                    return;
+                }
             }
+            catch (Exception) { };
 
             Exit();
         }

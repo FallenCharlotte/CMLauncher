@@ -1,4 +1,5 @@
-﻿using SharpCompress.Readers;
+﻿using BsDiff;
+using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -105,16 +106,43 @@ namespace CM_Launcher
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        UpdateLabel($"Patching {reader.Entry.Key.Replace("xdelta/", "")}");
+                        string keyFilename = reader.Entry.Key;
+                        string patchFilename = keyFilename;
+                        string compressionType = keyFilename.Substring(0, keyFilename.IndexOf("/"));
+
+                        if (compressionType == "xdelta" || compressionType == "bsdiff")
+                        {
+                            keyFilename = keyFilename.Substring(compressionType.Length + 1);
+                            patchFilename = patchFilename.Replace(compressionType, "chromapper");
+                        }
+                        else
+                        {
+                            compressionType = "";
+                            patchFilename = $"chromapper/{patchFilename}";
+                        }
+
+                        UpdateLabel($"Patching {keyFilename}");
                         Report(((float) stream.Position) / stream.Length);
 
                         using (MemoryStream memStream = new MemoryStream(100))
                         {
                             reader.WriteEntryTo(memStream);
 
-                            string patchFilename = reader.Entry.Key.Replace("xdelta", "chromapper");
-                            byte[] oldFile = File.ReadAllBytes(patchFilename);
-                            byte[] newFile = xdelta3.ApplyPatch(memStream.ToArray(), oldFile);
+                            byte[] newFile = memStream.ToArray();
+
+                            if (compressionType == "xdelta")
+                            {
+                                byte[] oldFile = File.ReadAllBytes(patchFilename);
+                                newFile = xdelta3.ApplyPatch(memStream.ToArray(), oldFile);
+                            }
+                            else if (compressionType == "bsdiff")
+                            {
+                                using (FileStream input = new FileStream(patchFilename, FileMode.Open, FileAccess.Read, FileShare.Read))
+                                using (MemoryStream memStream2 = new MemoryStream(100)) {
+                                    BinaryPatchUtility.Apply(input, () => new MemoryStream(newFile), memStream2);
+                                    newFile = memStream2.ToArray();
+                                }
+                            }
                             File.WriteAllBytes(patchFilename, newFile);
                         }
                     }
