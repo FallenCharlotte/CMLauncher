@@ -104,7 +104,8 @@ namespace CM_Launcher
         {
             var startInfo = new ProcessStartInfo("ChroMapper.exe")
             {
-                WorkingDirectory = Path.Combine(LauncherFolder, "chromapper")
+                WorkingDirectory = Path.Combine(LauncherFolder, "chromapper"),
+                Arguments = $"--launcher \"{Path.Combine(LauncherFolder, AppDomain.CurrentDomain.FriendlyName)}\""
             };
 
             Process.Start(startInfo);
