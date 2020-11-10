@@ -22,8 +22,13 @@ public class MacSpecific : IPlatformSpecific
 
     public JSONNode GetCMConfig()
     {
-        // TODO: Read cm config
-        return JSON.Parse("{}");
+        var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        string cmSettingsPath = Path.Combine(homeDir, "Library", "Application Support", "com.BinaryElement.ChroMapper", "ChroMapperSettings.json");
+
+        using (StreamReader reader = new StreamReader(cmSettingsPath))
+        {
+            return JSON.Parse(reader.ReadToEnd());
+        }
     }
 
     public string GetCDNPrefix()
@@ -33,12 +38,18 @@ public class MacSpecific : IPlatformSpecific
 
     public void UpdateLabel(string label)
     {
-        progressLabel.StringValue = label;
+        NSApplication.SharedApplication.InvokeOnMainThread(() =>
+        {
+            progressLabel.StringValue = label;
+        });
     }
 
     public void UpdateProgress(float progress)
     {
-        progressBar.DoubleValue = progress * 100;
+        NSApplication.SharedApplication.InvokeOnMainThread(() =>
+        {
+            progressBar.DoubleValue = progress * 100;
+        });
     }
 
     public void Exit()
@@ -60,7 +71,10 @@ public class MacSpecific : IPlatformSpecific
 
         Process.Start(startInfo2);
 
-        NSApplication.SharedApplication.Terminate(NSApplication.SharedApplication);
+        NSApplication.SharedApplication.InvokeOnMainThread(() =>
+        {
+            NSApplication.SharedApplication.Terminate(NSApplication.SharedApplication);
+        });
     }
 
     public string GetJenkinsFilename()

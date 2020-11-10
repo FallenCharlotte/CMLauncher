@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using BsDiff;
@@ -31,7 +32,10 @@ public class Main : IProgress<float>
             cdnUrl = Config.CDN_URL;
         }
 
-        DoUpdate();
+        new Thread(() =>
+        {
+            DoUpdate();
+        }).Start();
     }
 
     public async Task<int> GetLatestBuildNumber(ReleaseChannel releaseChannel)
@@ -109,9 +113,21 @@ public class Main : IProgress<float>
                 return;
             }
 
-            foreach (int patch in patches)
+            try
             {
-                current = await UpdateUsingPatch(current, patch);
+                foreach (int patch in patches)
+                {
+                    current = await UpdateUsingPatch(current, patch);
+                }
+            }
+            catch (xdelta3Exception)
+            {
+                // Files are almost certainly between builds so
+                // require an update before running again
+                SetVersion(0);
+
+                // Bail back to stable
+                await UpdateUsingZip(stable);
             }
         }
 
