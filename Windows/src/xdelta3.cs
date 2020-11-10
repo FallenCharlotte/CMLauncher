@@ -6,7 +6,7 @@ public class xdelta3
     /// <summary>
     /// Sets the maximum buffer size that xdelta3 is allowed to write to.
     /// </summary>
-    static readonly int MAX_BUFFER = 64 * 1024 * 1024; // 64 MB
+    static readonly int MAX_BUFFER = 128 * 1024 * 1024; // 128 MB
 
     /// <summary>
     /// Creates xdelta3 patch from source to target.
