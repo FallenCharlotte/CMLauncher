@@ -53,7 +53,7 @@ public class WindowsSpecific : IPlatformSpecific
 
     public string GetCDNPrefix()
     {
-        return "";
+        return "win/";
     }
 
     public void UpdateLabel(string label)
