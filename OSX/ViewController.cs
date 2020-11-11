@@ -17,6 +17,7 @@ namespace OSX
             // Do any additional setup after loading the view.
 
             progressLabel.StringValue = "Checking for updates";
+            progressBar.Indeterminate = true;
 
             IVersion ver = Version.GetVersion();
             //ver.Update(0, "");

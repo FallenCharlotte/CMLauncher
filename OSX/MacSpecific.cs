@@ -48,6 +48,7 @@ public class MacSpecific : IPlatformSpecific
     {
         NSApplication.SharedApplication.InvokeOnMainThread(() =>
         {
+            progressBar.Indeterminate = false;
             progressBar.DoubleValue = progress * 100;
         });
     }

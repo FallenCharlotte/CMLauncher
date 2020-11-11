@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>OSX</string>
+	<string>CM Launcher</string>
 	<key>CFBundleIdentifier</key>
-	<string>at.topc.OSX</string>
+	<string>at.topc.cm.launcher</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
