@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 
 using AppKit;
 using Foundation;
+using Xamarin.Essentials;
 
 namespace OSX
 {
@@ -19,11 +20,16 @@ namespace OSX
             progressLabel.StringValue = "Checking for updates";
             progressBar.Indeterminate = true;
 
-            IVersion ver = Version.GetVersion();
             //ver.Update(0, "");
             new Main(new MacSpecific(progressLabel, progressBar));
-            
+
             // \o/
+        }
+
+        public override void ViewDidDisappear()
+        {
+            base.ViewDidDisappear();
+            NSApplication.SharedApplication.Terminate(NSApplication.SharedApplication);
         }
 
         public override void ViewWillAppear()

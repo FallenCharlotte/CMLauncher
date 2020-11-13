@@ -17,6 +17,12 @@ public interface IPlatformSpecific
 
     string LocalFolderName();
 
+    void PerformAuth();
+
+    string[] GetAuthTokens();
+
+    void SetAuthTokens(string access_token, string refresh_token);
+
     void UpdateLabel(string label);
 
     void UpdateProgress(float progress);

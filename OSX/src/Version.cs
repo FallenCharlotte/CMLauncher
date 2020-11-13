@@ -1,4 +1,4 @@
-﻿using Xamarin.Essentials;
+using Xamarin.Essentials;
 
 namespace OSX
 {

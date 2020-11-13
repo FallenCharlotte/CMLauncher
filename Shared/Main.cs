@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -10,16 +11,22 @@ using System.Xml;
 using BsDiff;
 using SharpCompress.Common;
 using SharpCompress.Readers;
+using SimpleJSON;
 
 public class Main : IProgress<float>
 {
+    public static Main Instance { get; private set; }
+    public Thread thread;
+
     private readonly ReleaseChannel useChannel = ReleaseChannel.Stable;
     private readonly IPlatformSpecific platformSpecific;
     private readonly string cdnUrl;
+    private readonly CookieContainer cookieContainer = new CookieContainer();
 
     public Main(IPlatformSpecific platformSpecific)
     {
         this.platformSpecific = platformSpecific;
+        Instance = this;
 
         var mainNode = platformSpecific.GetCMConfig();
         useChannel = mainNode["ReleaseChannel"].Value == "0" ? ReleaseChannel.Stable : ReleaseChannel.Dev;
@@ -32,24 +39,30 @@ public class Main : IProgress<float>
             cdnUrl = Config.CDN_URL;
         }
 
-        new Thread(() =>
+        thread = new Thread(() =>
         {
             DoUpdate();
-        }).Start();
+        });
+        thread.Start();
     }
 
     public async Task<int> GetLatestBuildNumber(ReleaseChannel releaseChannel)
     {
-        using (HttpClient client = new HttpClient())
-        {
-            string channel = releaseChannel == ReleaseChannel.Stable ? "stable" : "dev";
+        using var httpClientHandler = new HttpClientHandler() { CookieContainer = cookieContainer };
+        using HttpClient client = new HttpClient(httpClientHandler);
 
-            using (HttpResponseMessage response = await client.GetAsync($"{cdnUrl}/{channel}"))
+        string channel = releaseChannel == ReleaseChannel.Stable ? "stable" : "dev";
+
+        using (HttpResponseMessage response = await client.GetAsync($"{cdnUrl}/{channel}"))
+        {
+            if (response.StatusCode == HttpStatusCode.Forbidden)
             {
-                using (HttpContent content = response.Content)
-                {
-                    return int.Parse(await content.ReadAsStringAsync());
-                }
+                throw new AuthException();
+            }
+
+            using (HttpContent content = response.Content)
+            {
+                return int.Parse(await content.ReadAsStringAsync());
             }
         }
     }
@@ -57,6 +70,46 @@ public class Main : IProgress<float>
     private void SetVersion(int version)
     {
         platformSpecific.GetVersion().Update(version, cdnUrl);
+    }
+
+    public async void ResumeUpdate(string access_token, string refresh_token)
+    {
+        using HttpClient client = new HttpClient();
+
+        try
+        {
+            using (HttpResponseMessage response = await client.GetAsync($"{Config.AUTH_URL}/cookie?access_token={access_token}&refresh_token={refresh_token}"))
+            {
+                using (HttpContent content = response.Content)
+                {
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        platformSpecific.PerformAuth();
+                        return;
+                    }
+                    else if (response.StatusCode != HttpStatusCode.OK)
+                    {
+                        throw new Exception();
+                    }
+
+                    var str = await content.ReadAsStringAsync();
+                    var json = JSON.Parse(str);
+
+                    if (json.HasKey("access_token") && json.HasKey("refresh_token"))
+                    {
+                        platformSpecific.SetAuthTokens(json["access_token"].Value, json["refresh_token"].Value);
+                    }
+
+                    cookieContainer.Add(new Uri(cdnUrl), new Cookie("Cloud-CDN-Cookie", json["cookie"].Value));
+                    DoUpdate();
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Can't update because we can't auth, but can't auth. Give up.
+            platformSpecific.Exit();
+        }
     }
 
     private async void DoUpdate()
@@ -79,9 +132,30 @@ public class Main : IProgress<float>
                 return;
             }
         }
+        catch (AuthException)
+        {
+            CheckAuth();
+            return;
+        }
         catch (Exception) { };
 
         platformSpecific.Exit();
+    }
+
+    private void CheckAuth()
+    {
+        if (cookieContainer.Count == 0)
+        {
+            string[] tokens = platformSpecific.GetAuthTokens();
+
+            if (tokens.Length > 1)
+            {
+                ResumeUpdate(tokens[0], tokens[1]);
+                return;
+            }
+        }
+
+        platformSpecific.PerformAuth();
     }
 
     private async void PerformUpdate(int current, int desired)
@@ -139,26 +213,26 @@ public class Main : IProgress<float>
         var regex = new Regex(prefix + @"[0-9]+/([0-9]+).patch");
         var patches = new List<int>();
 
-        using (HttpClient client = new HttpClient())
+        using var httpClientHandler = new HttpClientHandler() { CookieContainer = cookieContainer };
+        using HttpClient client = new HttpClient(httpClientHandler);
+
+        using (HttpResponseMessage response = await client.GetAsync($"{cdnUrl}?prefix={prefix}{desired}/"))
         {
-            using (HttpResponseMessage response = await client.GetAsync($"{cdnUrl}?prefix={prefix}{desired}/"))
+            using (HttpContent content = response.Content)
             {
-                using (HttpContent content = response.Content)
+                var stream = await content.ReadAsStreamAsync();
+                XmlReader xReader = XmlReader.Create(stream);
+
+                while (xReader.ReadToFollowing("Contents"))
                 {
-                    var stream = await content.ReadAsStreamAsync();
-                    XmlReader xReader = XmlReader.Create(stream);
+                    xReader.ReadToFollowing("Key");
+                    var str = xReader.ReadElementContentAsString();
+                    var matches = regex.Matches(str);
 
-                    while (xReader.ReadToFollowing("Contents"))
+                    if (matches.Count > 0)
                     {
-                        xReader.ReadToFollowing("Key");
-                        var str = xReader.ReadElementContentAsString();
-                        var matches = regex.Matches(str);
-
-                        if (matches.Count > 0)
-                        {
-                            int possible = int.Parse(matches[0].Groups[1].Value);
-                            patches.Add(possible);
-                        }
+                        int possible = int.Parse(matches[0].Groups[1].Value);
+                        patches.Add(possible);
                     }
                 }
             }
@@ -198,14 +272,14 @@ public class Main : IProgress<float>
 
         using (var tmp = new TempFile())
         {
-            using (var client = new HttpClient())
-            {
-                client.Timeout = TimeSpan.FromMinutes(5);
+            using var httpClientHandler = new HttpClientHandler() { CookieContainer = cookieContainer };
+            using HttpClient client = new HttpClient(httpClientHandler);
 
-                using (var file = new FileStream(tmp.Path, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    await client.DownloadAsync(downloadUrl, file, this);
-                }
+            client.Timeout = TimeSpan.FromMinutes(5);
+
+            using (var file = new FileStream(tmp.Path, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                await client.DownloadAsync(downloadUrl, file, this);
             }
 
             ExtractZip(tmp.Path);
@@ -267,14 +341,14 @@ public class Main : IProgress<float>
 
         using (var tmp = new TempFile())
         {
-            using (var client = new HttpClient())
-            {
-                client.Timeout = TimeSpan.FromMinutes(5);
+            using var httpClientHandler = new HttpClientHandler() { CookieContainer = cookieContainer };
+            using HttpClient client = new HttpClient(httpClientHandler);
 
-                using (var file = new FileStream(tmp.Path, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    await client.DownloadAsync(downloadUrl, file, this);
-                }
+            client.Timeout = TimeSpan.FromMinutes(5);
+
+            using (var file = new FileStream(tmp.Path, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                await client.DownloadAsync(downloadUrl, file, this);
             }
 
             ApplyPatch(tmp.Path);

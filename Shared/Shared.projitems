@@ -19,5 +19,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)HttpClientExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StreamExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BinaryPatchUtility.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AuthException.cs" />
   </ItemGroup>
 </Project>

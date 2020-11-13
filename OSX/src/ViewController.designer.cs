@@ -20,14 +20,14 @@ namespace OSX
 		
 		void ReleaseDesignerOutlets ()
 		{
-			if (progressLabel != null) {
-				progressLabel.Dispose ();
-				progressLabel = null;
-			}
-
 			if (progressBar != null) {
 				progressBar.Dispose ();
 				progressBar = null;
+			}
+
+			if (progressLabel != null) {
+				progressLabel.Dispose ();
+				progressLabel = null;
 			}
 		}
 	}

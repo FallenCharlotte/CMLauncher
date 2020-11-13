@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using AppKit;
 using SimpleJSON;
+using Xamarin.Essentials;
 
 public class MacSpecific : IPlatformSpecific
 {
@@ -96,5 +97,23 @@ public class MacSpecific : IPlatformSpecific
     public string LocalFolderName()
     {
         return "";
+    }
+
+    public void PerformAuth()
+    {
+        Browser.OpenAsync($"{Config.AUTH_URL}/auth", BrowserLaunchMode.SystemPreferred);
+    }
+
+    public string[] GetAuthTokens()
+    {
+        return new string[] {
+            Preferences.Get("access_token", ""), Preferences.Get("refresh_token", "")
+        };
+    }
+
+    public void SetAuthTokens(string access_token, string refresh_token)
+    {
+        Preferences.Set("access_token", access_token);
+        Preferences.Set("refresh_token", refresh_token);
     }
 }
