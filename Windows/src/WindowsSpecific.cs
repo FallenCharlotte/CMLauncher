@@ -98,4 +98,20 @@ public class WindowsSpecific : IPlatformSpecific
     {
         return "chromapper";
     }
+
+    public void PerformAuth()
+    {
+        Process.Start($"{Config.AUTH_URL}/auth");
+    }
+
+    public string[] GetAuthTokens()
+    {
+        var version = Version.GetVersion();
+        return new string[] { version.AccessToken, version.RefreshToken };
+    }
+
+    public void SetAuthTokens(string access_token, string refresh_token)
+    {
+        Version.GetVersion().SetTokens(access_token, refresh_token);
+    }
 }
