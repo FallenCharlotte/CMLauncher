@@ -1,8 +1,10 @@
-﻿using System;
+﻿using SimpleJSON;
+using System;
 using System.IO;
 
 class Version : IVersion
 {
+    private readonly JSONObject versionInfo = new JSONObject();
     public int VersionNumber { get; private set; } = 0;
     public string VersionServer { get; private set; } = "";
 
@@ -24,17 +26,31 @@ class Version : IVersion
 
         if (File.Exists(VersionFilename))
         {
-            string[] versionInfo = File.ReadAllText(VersionFilename).Split('\n');
-            VersionNumber = int.Parse(versionInfo[0]);
+            var json = JSON.Parse(File.ReadAllText(VersionFilename));
+            if (json is JSONObject j)
+            {
+                versionInfo = j;
 
-            if (versionInfo.Length > 1)
-                VersionServer = versionInfo[1];
+                VersionNumber = versionInfo["version"]?.AsInt ?? 0;
+                VersionServer = versionInfo["server"].Value;
+            }
+            else
+            {
+                string[] versionInfo = File.ReadAllText(VersionFilename).Split('\n');
+                VersionNumber = int.Parse(versionInfo[0]);
+
+                if (versionInfo.Length > 1)
+                    VersionServer = versionInfo[1];
+            }
         }
     }
 
     void IVersion.Update(int version, string server)
     {
-        File.WriteAllText(VersionFilename, $"{version}\n{server}");
+        versionInfo["server"] = server;
+        versionInfo["version"] = version;
+
+        File.WriteAllText(VersionFilename, versionInfo.ToString());
 
         VersionNumber = version;
         VersionServer = server;
