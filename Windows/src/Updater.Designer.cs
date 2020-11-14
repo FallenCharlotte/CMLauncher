@@ -35,10 +35,10 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(12, 47);
+            this.progressBar1.Location = new System.Drawing.Point(12, 33);
             this.progressBar1.Maximum = 1000;
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(645, 23);
+            this.progressBar1.Size = new System.Drawing.Size(525, 18);
             this.progressBar1.TabIndex = 0;
             // 
             // label1
@@ -47,7 +47,7 @@
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(12, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(645, 26);
+            this.label1.Size = new System.Drawing.Size(525, 21);
             this.label1.TabIndex = 1;
             this.label1.Text = "Checking for updates...";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -56,7 +56,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(669, 77);
+            this.ClientSize = new System.Drawing.Size(549, 62);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.progressBar1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
