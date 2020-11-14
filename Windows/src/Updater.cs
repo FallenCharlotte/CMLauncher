@@ -38,7 +38,7 @@ namespace CM_Launcher
         {
             synchronizationContext.Post(new SendOrPostCallback(o =>
             {
-                progressBar1.Value = (int) o;
+                progressBar1.Value = Math.Min((int) o, 1000);
             }), (int)(value * 1000));
         }
     }

@@ -6,7 +6,7 @@ public class xdelta3
     /// <summary>
     /// Sets the maximum buffer size that xdelta3 is allowed to write to.
     /// </summary>
-    static readonly int MAX_BUFFER = 128 * 1024 * 1024; // 128 MB
+    static readonly int MAX_BUFFER = 8 * 1024 * 1024; // 8 MB
 
     /// <summary>
     /// Creates xdelta3 patch from source to target.
@@ -46,7 +46,7 @@ public class xdelta3
     /// <returns>Patched data.</returns>
     public static byte[] ApplyPatch(byte[] patch, byte[] source)
     {
-        byte[] obuf = new byte[MAX_BUFFER];
+        byte[] obuf = new byte[patch.Length + source.Length + MAX_BUFFER];
         UInt32 obufSize;
 
         // Call xdelta3 library

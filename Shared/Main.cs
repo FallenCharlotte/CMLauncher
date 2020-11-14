@@ -232,31 +232,30 @@ public class Main : IProgress<float>
         using (Stream stream = File.OpenRead(filename))
         {
             var reader = ReaderFactory.Open(stream);
-            while (reader.MoveToNextEntry())
+            reader.Patches().AsParallel().Select(patch =>
             {
-                if (!reader.Entry.IsDirectory)
+                string keyFilename = patch.FileName;
+
+                string completeFileName = Path.GetFullPath(Path.Combine(destinationDirectoryFullPath, keyFilename));
+
+                if (!completeFileName.StartsWith(destinationDirectoryFullPath, StringComparison.OrdinalIgnoreCase))
                 {
-                    string keyFilename = reader.Entry.Key;
-
-                    platformSpecific.UpdateLabel($"Extracting {keyFilename.Replace("chromapper/", "").Replace("ChroMapper.app/", "")}");
-                    platformSpecific.UpdateProgress(((float)stream.Position) / stream.Length);
-
-                    string completeFileName = Path.GetFullPath(Path.Combine(destinationDirectoryFullPath, keyFilename));
-
-                    if (!completeFileName.StartsWith(destinationDirectoryFullPath, StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw new IOException("Trying to extract file outside of destination directory");
-                    }
-
-                    Directory.CreateDirectory(Path.GetDirectoryName(completeFileName));
-                    if (keyFilename == "") // Assuming Empty for Directory
-                    {
-                        continue;
-                    }
-
-                    reader.WriteEntryToFile(completeFileName, opts);
+                    // Lets just ignore it
+                    //throw new IOException("Trying to extract file outside of destination directory");
                 }
-            }
+                else if (keyFilename == "")
+                {
+                    // Probably a directory
+                }
+                else
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(completeFileName));
+                    File.WriteAllBytes(completeFileName, patch.Stream.ToArray());
+                }
+
+                patch.FileName = patch.FileName.Replace("chromapper/", "").Replace("ChroMapper.app/", "");
+                return patch;
+            }).WithProgressReporting(stream.Length, this, "Extracting", platformSpecific.UpdateLabel).ForAll(p => { });
         }
     }
 
@@ -290,54 +289,47 @@ public class Main : IProgress<float>
         using (Stream stream = File.OpenRead(filename))
         {
             var reader = ReaderFactory.Open(stream);
-            while (reader.MoveToNextEntry())
+            reader.Patches().AsParallel().Select(patch =>
             {
-                if (!reader.Entry.IsDirectory)
+                MemoryStream memStream = patch.Stream;
+                string keyFilename = patch.FileName;
+
+                string patchFilename = keyFilename;
+                string compressionType = keyFilename.Substring(0, keyFilename.IndexOf("/"));
+
+                if (compressionType == "xdelta" || compressionType == "bsdiff")
                 {
-                    string keyFilename = reader.Entry.Key;
-                    string patchFilename = keyFilename;
-                    string compressionType = keyFilename.Substring(0, keyFilename.IndexOf("/"));
+                    patch.FileName = keyFilename = keyFilename.Substring(compressionType.Length + 1);
+                    patchFilename = patchFilename.Replace(compressionType, platformSpecific.LocalFolderName()).TrimStart('/');
+                }
+                else
+                {
+                    compressionType = "";
+                    patchFilename = Path.Combine(platformSpecific.LocalFolderName(), patchFilename);
+                }
 
-                    if (compressionType == "xdelta" || compressionType == "bsdiff")
+                patchFilename = Path.Combine(platformSpecific.GetDownloadFolder(), patchFilename);
+
+                byte[] newFile = memStream.ToArray();
+
+                if (compressionType == "xdelta")
+                {
+                    byte[] oldFile = File.ReadAllBytes(patchFilename);
+                    newFile = xdelta3.ApplyPatch(memStream.ToArray(), oldFile);
+                }
+                else if (compressionType == "bsdiff")
+                {
+                    using (FileStream input = new FileStream(patchFilename, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (MemoryStream memStream2 = new MemoryStream(100))
                     {
-                        keyFilename = keyFilename.Substring(compressionType.Length + 1);
-                        patchFilename = patchFilename.Replace(compressionType, platformSpecific.LocalFolderName()).TrimStart('/');
-                    }
-                    else
-                    {
-                        compressionType = "";
-                        patchFilename = Path.Combine(platformSpecific.LocalFolderName(), patchFilename);
-                    }
-
-                    patchFilename = Path.Combine(platformSpecific.GetDownloadFolder(), patchFilename);
-
-                    platformSpecific.UpdateLabel($"Patching {keyFilename}");
-                    Report(((float)stream.Position) / stream.Length);
-
-                    using (MemoryStream memStream = new MemoryStream(100))
-                    {
-                        reader.WriteEntryTo(memStream);
-
-                        byte[] newFile = memStream.ToArray();
-
-                        if (compressionType == "xdelta")
-                        {
-                            byte[] oldFile = File.ReadAllBytes(patchFilename);
-                            newFile = xdelta3.ApplyPatch(memStream.ToArray(), oldFile);
-                        }
-                        else if (compressionType == "bsdiff")
-                        {
-                            using (FileStream input = new FileStream(patchFilename, FileMode.Open, FileAccess.Read, FileShare.Read))
-                            using (MemoryStream memStream2 = new MemoryStream(100))
-                            {
-                                BinaryPatchUtility.Apply(input, () => new MemoryStream(newFile), memStream2);
-                                newFile = memStream2.ToArray();
-                            }
-                        }
-                        File.WriteAllBytes(patchFilename, newFile);
+                        BinaryPatchUtility.Apply(input, () => new MemoryStream(newFile), memStream2);
+                        newFile = memStream2.ToArray();
                     }
                 }
-            }
+                File.WriteAllBytes(patchFilename, newFile);
+
+                return patch;
+            }).WithProgressReporting(stream.Length, this, "Patching", platformSpecific.UpdateLabel).ForAll(p => { });
         }
     }
 
