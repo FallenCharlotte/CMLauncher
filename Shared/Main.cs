@@ -196,6 +196,11 @@ public class Main : IProgress<float>
                 };
             return ret;
         }
+        else if (patches.Count > 50)
+        {
+            // You're just asking for a stack overflow exception
+            return null;
+        }
 
         try
         {
