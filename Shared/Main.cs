@@ -89,14 +89,37 @@ public class Main : IProgress<float>
         int stable = await GetLatestBuildNumber(ReleaseChannel.Stable);
         var version = platformSpecific.GetVersion();
 
+        // Downgrade or first run
         if (version.VersionServer != cdnUrl || current > desired)
         {
             current = await UpdateUsingZip(stable);
         }
 
+        // We need to update
         if (current < desired)
         {
             var patches = await FindPath(platformSpecific.GetCDNPrefix(), current, desired);
+
+            // That's a lot of patches
+            if (current < stable && (patches == null || patches.Count > Config.PATCH_SKIP_LIMIT))
+            {
+                if (stable == desired)
+                {
+                    // Too many patches just download it, tiggers the zip update code path below
+                    patches = null;
+                }
+                else
+                {
+                    // Check how many patches we would save
+                    var currentPatches = await FindPath(platformSpecific.GetCDNPrefix(), stable, desired);
+                    if (patches == null || patches.Count - currentPatches.Count > Config.PATCH_SKIP_LIMIT)
+                    {
+                        // We'll save having to do many patches if we download the stable zip
+                        current = await UpdateUsingZip(stable);
+                        patches = currentPatches;
+                    }
+                }
+            }
 
             if (patches == null)
             {
@@ -104,7 +127,7 @@ public class Main : IProgress<float>
                 // If we're not on stable go there
                 if (current != stable)
                 {
-                    await UpdateUsingZip(stable);
+                    current = await UpdateUsingZip(stable);
                 }
 
                 // Abandon ship!
@@ -127,7 +150,7 @@ public class Main : IProgress<float>
                 SetVersion(0);
 
                 // Bail back to stable
-                await UpdateUsingZip(stable);
+                current = await UpdateUsingZip(stable);
             }
         }
 
