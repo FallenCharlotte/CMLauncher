@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace CM_Launcher
@@ -11,9 +12,15 @@ namespace CM_Launcher
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Updater());
+            using (Mutex mutex = new Mutex(true, "CMLauncher", out bool createdNew))
+            {
+                if (createdNew)
+                {
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    Application.Run(new Updater());
+                }
+            }
         }
     }
 }
