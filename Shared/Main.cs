@@ -143,7 +143,7 @@ public class Main : IProgress<float>
                     current = await UpdateUsingPatch(current, patch);
                 }
             }
-            catch (xdelta3Exception)
+            catch (AggregateException)
             {
                 // Files are almost certainly between builds so
                 // require an update before running again
@@ -342,7 +342,7 @@ public class Main : IProgress<float>
 
                 if (compressionType == "xdelta")
                 {
-                    byte[] oldFile = File.ReadAllBytes(patchFilename);
+                    byte[] oldFile = File.Exists(patchFilename) ? File.ReadAllBytes(patchFilename) : new byte[] { };
                     newFile = xdelta3.ApplyPatch(memStream.ToArray(), oldFile);
                 }
                 else if (compressionType == "bsdiff")
