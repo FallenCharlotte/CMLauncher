@@ -354,6 +354,8 @@ public class Main : IProgress<float>
                         newFile = memStream2.ToArray();
                     }
                 }
+                if (!Directory.Exists(patchFilename))
+                    Directory.CreateDirectory(Path.GetDirectoryName(patchFilename));
                 File.WriteAllBytes(patchFilename, newFile);
 
                 return patch;
