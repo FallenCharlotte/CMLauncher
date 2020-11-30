@@ -36,25 +36,24 @@ public static class StreamExtensions
     {
         while (source.MoveToNextEntry())
         {
-            if (!source.Entry.IsDirectory)
-            {
-                using (Patch patch = new Patch(source.Entry.Key))
-                {
-                    source.WriteEntryTo(patch.Stream);
-                    patch.CacheLength();
+            if (source.Entry.IsDirectory) continue;
 
-                    yield return patch;
-                }
+            using (var patch = new Patch(source.Entry.Key))
+            {
+                source.WriteEntryTo(patch.Stream);
+                patch.CacheLength();
+
+                yield return patch;
             }
         }
     }
 
     public static ParallelQuery<Patch> WithProgressReporting(this ParallelQuery<Patch> source, long itemsCount, IProgress<float> progress, string prefix, Action<string> textUpdate)
     {
-        int countShared = 0;
+        var countShared = 0;
         return source.Select(item =>
         {
-            int countLocal = Interlocked.Add(ref countShared, item.Length);
+            var countLocal = Interlocked.Add(ref countShared, item.Length);
             progress.Report(countLocal / (float)itemsCount);
             textUpdate.Invoke($"{prefix} {item.FileName}");
             return item;

@@ -18,18 +18,18 @@ namespace CM_Launcher
 
         public void UpdateLabel(string text)
         {
-            synchronizationContext.Post(new SendOrPostCallback(o =>
+            synchronizationContext.Post(o =>
             {
                 label1.Text = $"{o}";
-            }), text);
+            }, text);
         }
 
         public void Report(float value)
         {
-            synchronizationContext.Post(new SendOrPostCallback(o =>
+            synchronizationContext.Post(o =>
             {
                 progressBar1.Value = Math.Min((int) o, 1000);
-            }), (int)(value * 1000));
+            }, (int)(value * 1000));
         }
     }
 }

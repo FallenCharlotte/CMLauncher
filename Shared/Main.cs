@@ -13,7 +13,7 @@ using SharpCompress.Readers;
 
 public class Main : IProgress<float>
 {
-    private readonly ReleaseChannel useChannel = ReleaseChannel.Stable;
+    private readonly ReleaseChannel useChannel;
     private readonly IPlatformSpecific platformSpecific;
     private readonly string cdnUrl;
 
@@ -22,31 +22,21 @@ public class Main : IProgress<float>
         this.platformSpecific = platformSpecific;
 
         var mainNode = platformSpecific.GetCMConfig();
-        useChannel = mainNode["ReleaseChannel"].Value == "0" ? ReleaseChannel.Stable : ReleaseChannel.Dev;
-        if (mainNode.HasKey("ReleaseServer"))
-        {
-            cdnUrl = mainNode["ReleaseServer"].Value;
-        }
-        else
-        {
-            cdnUrl = Config.CDN_URL;
-        }
+        useChannel = mainNode["ReleaseChannel"].Value == "1" ? ReleaseChannel.Dev : ReleaseChannel.Stable;
+        cdnUrl = mainNode.HasKey("ReleaseServer") ? mainNode["ReleaseServer"].Value : Config.CDN_URL;
 
-        new Thread(() =>
-        {
-            DoUpdate();
-        }).Start();
+        new Thread(DoUpdate).Start();
     }
 
     public async Task<int> GetLatestBuildNumber(ReleaseChannel releaseChannel)
     {
-        using (HttpClient client = new HttpClient())
+        using (var client = new HttpClient())
         {
-            string channel = releaseChannel == ReleaseChannel.Stable ? "stable" : "dev";
+            var channel = releaseChannel == ReleaseChannel.Stable ? "stable" : "dev";
 
-            using (HttpResponseMessage response = await client.GetAsync($"{cdnUrl}/{channel}"))
+            using (var response = await client.GetAsync($"{cdnUrl}/{channel}"))
             {
-                using (HttpContent content = response.Content)
+                using (var content = response.Content)
                 {
                     return int.Parse(await content.ReadAsStringAsync());
                 }
@@ -67,7 +57,7 @@ public class Main : IProgress<float>
             int current = version.VersionNumber;
             int desired = await GetLatestBuildNumber(useChannel);
 
-            /**
+            /*
              * Update if:
              *  - Our version server does not match (possibly because we have no current version)
              *  - We have an old version
@@ -79,7 +69,10 @@ public class Main : IProgress<float>
                 return;
             }
         }
-        catch (Exception) { };
+        catch (Exception)
+        {
+            // ignored
+        }
 
         platformSpecific.Exit();
     }
@@ -105,7 +98,7 @@ public class Main : IProgress<float>
             {
                 if (stable == desired)
                 {
-                    // Too many patches just download it, tiggers the zip update code path below
+                    // Too many patches just download it, triggers the zip update code path below
                     patches = null;
                 }
                 else
@@ -138,7 +131,7 @@ public class Main : IProgress<float>
 
             try
             {
-                foreach (int patch in patches)
+                foreach (var patch in patches)
                 {
                     current = await UpdateUsingPatch(current, patch);
                 }
@@ -162,14 +155,14 @@ public class Main : IProgress<float>
         var regex = new Regex(prefix + @"[0-9]+/([0-9]+).patch");
         var patches = new List<int>();
 
-        using (HttpClient client = new HttpClient())
+        using (var client = new HttpClient())
         {
-            using (HttpResponseMessage response = await client.GetAsync($"{cdnUrl}?prefix={prefix}{desired}/"))
+            using (var response = await client.GetAsync($"{cdnUrl}?prefix={prefix}{desired}/"))
             {
-                using (HttpContent content = response.Content)
+                using (var content = response.Content)
                 {
                     var stream = await content.ReadAsStreamAsync();
-                    XmlReader xReader = XmlReader.Create(stream);
+                    var xReader = XmlReader.Create(stream);
 
                     while (xReader.ReadToFollowing("Contents"))
                     {
@@ -179,7 +172,7 @@ public class Main : IProgress<float>
 
                         if (matches.Count > 0)
                         {
-                            int possible = int.Parse(matches[0].Groups[1].Value);
+                            var possible = int.Parse(matches[0].Groups[1].Value);
                             patches.Add(possible);
                         }
                     }
@@ -207,8 +200,7 @@ public class Main : IProgress<float>
             var oldest = patches.Where(a => a > current).Min();
             var ret2 = await FindPath(prefix, current, oldest);
 
-            if (ret2 != null)
-                ret2.Add(desired);
+            ret2?.Add(desired);
 
             return ret2;
         }
@@ -262,9 +254,9 @@ public class Main : IProgress<float>
             var reader = ReaderFactory.Open(stream);
             reader.Patches().AsParallel().Select(patch =>
             {
-                string keyFilename = patch.FileName;
+                var keyFilename = patch.FileName;
 
-                string completeFileName = Path.GetFullPath(Path.Combine(destinationDirectoryFullPath, keyFilename));
+                var completeFileName = Path.GetFullPath(Path.Combine(destinationDirectoryFullPath, keyFilename));
 
                 if (!completeFileName.StartsWith(destinationDirectoryFullPath, StringComparison.OrdinalIgnoreCase))
                 {
@@ -319,11 +311,11 @@ public class Main : IProgress<float>
             var reader = ReaderFactory.Open(stream);
             reader.Patches().AsParallel().Select(patch =>
             {
-                MemoryStream memStream = patch.Stream;
-                string keyFilename = patch.FileName;
+                var memStream = patch.Stream;
+                var keyFilename = patch.FileName;
 
-                string patchFilename = keyFilename;
-                string compressionType = keyFilename.Substring(0, keyFilename.IndexOf("/"));
+                var patchFilename = keyFilename;
+                var compressionType = keyFilename.Substring(0, keyFilename.IndexOf("/"));
 
                 if (compressionType == "xdelta" || compressionType == "bsdiff")
                 {
@@ -347,8 +339,8 @@ public class Main : IProgress<float>
                 }
                 else if (compressionType == "bsdiff")
                 {
-                    using (FileStream input = new FileStream(patchFilename, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    using (MemoryStream memStream2 = new MemoryStream(100))
+                    using (var input = new FileStream(patchFilename, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var memStream2 = new MemoryStream(100))
                     {
                         BinaryPatchUtility.Apply(input, () => new MemoryStream(newFile), memStream2);
                         newFile = memStream2.ToArray();

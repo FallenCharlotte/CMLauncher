@@ -1,6 +1,4 @@
-﻿using System;
-
-public interface IVersion
+﻿public interface IVersion
 {
     int VersionNumber { get; }
     string VersionServer { get; }

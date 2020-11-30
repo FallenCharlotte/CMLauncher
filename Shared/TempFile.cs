@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-sealed class TempFile : IDisposable
+internal sealed class TempFile : IDisposable
 {
     string path;
     public TempFile() : this(System.IO.Path.GetTempFileName()) { }

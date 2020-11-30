@@ -24,24 +24,23 @@ class Version : IVersion
     {
         VersionFilename = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cm-version");
 
-        if (File.Exists(VersionFilename))
+        if (!File.Exists(VersionFilename)) return;
+
+        var json = JSON.Parse(File.ReadAllText(VersionFilename));
+        if (json is JSONObject j)
         {
-            var json = JSON.Parse(File.ReadAllText(VersionFilename));
-            if (json is JSONObject j)
-            {
-                versionInfo = j;
+            versionInfo = j;
 
-                VersionNumber = versionInfo["version"]?.AsInt ?? 0;
-                VersionServer = versionInfo["server"].Value;
-            }
-            else
-            {
-                string[] versionInfo = File.ReadAllText(VersionFilename).Split('\n');
-                VersionNumber = int.Parse(versionInfo[0]);
+            VersionNumber = versionInfo["version"]?.AsInt ?? 0;
+            VersionServer = versionInfo["server"].Value;
+        }
+        else
+        {
+            var oldVersionInfo = File.ReadAllText(VersionFilename).Split('\n');
+            VersionNumber = int.Parse(oldVersionInfo[0]);
 
-                if (versionInfo.Length > 1)
-                    VersionServer = versionInfo[1];
-            }
+            if (oldVersionInfo.Length > 1)
+                VersionServer = oldVersionInfo[1];
         }
     }
 
