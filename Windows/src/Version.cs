@@ -8,25 +8,21 @@ class Version : IVersion
     public int VersionNumber { get; private set; } = 0;
     public string VersionServer { get; private set; } = "";
 
-    private readonly string VersionFilename;
-    private static Version version = null;
+    private readonly string versionFilename;
+    private static Version _version;
 
     public static Version GetVersion()
     {
-        if (version == null)
-        {
-            version = new Version();
-        }
-        return version;
+        return _version ?? (_version = new Version());
     }
 
     private Version()
     {
-        VersionFilename = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cm-version");
+        versionFilename = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cm-version");
 
-        if (!File.Exists(VersionFilename)) return;
+        if (!File.Exists(versionFilename)) return;
 
-        var json = JSON.Parse(File.ReadAllText(VersionFilename));
+        var json = JSON.Parse(File.ReadAllText(versionFilename));
         if (json is JSONObject j)
         {
             versionInfo = j;
@@ -36,7 +32,7 @@ class Version : IVersion
         }
         else
         {
-            var oldVersionInfo = File.ReadAllText(VersionFilename).Split('\n');
+            var oldVersionInfo = File.ReadAllText(versionFilename).Split('\n');
             VersionNumber = int.Parse(oldVersionInfo[0]);
 
             if (oldVersionInfo.Length > 1)
@@ -49,7 +45,7 @@ class Version : IVersion
         versionInfo["server"] = server;
         versionInfo["version"] = version;
 
-        File.WriteAllText(VersionFilename, versionInfo.ToString());
+        File.WriteAllText(versionFilename, versionInfo.ToString());
 
         VersionNumber = version;
         VersionServer = server;
