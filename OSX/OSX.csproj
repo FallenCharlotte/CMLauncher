@@ -57,6 +57,18 @@
     <Reference Include="SharpCompress">
       <HintPath>..\packages\SharpCompress.0.26.0\lib\netstandard2.1\SharpCompress.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\netstandard2.0\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Sentry.PlatformAbstractions">
+      <HintPath>..\packages\Sentry.PlatformAbstractions.1.1.1\lib\netstandard2.0\Sentry.PlatformAbstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Sentry.Protocol">
+      <HintPath>..\packages\Sentry.Protocol.2.1.8\lib\netstandard2.0\Sentry.Protocol.dll</HintPath>
+    </Reference>
+    <Reference Include="Sentry">
+      <HintPath>..\packages\Sentry.2.1.8\lib\netstandard2.0\Sentry.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Contents.json" />

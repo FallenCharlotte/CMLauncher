@@ -30,7 +30,9 @@ internal sealed class TempFile : IDisposable
         if (path != null)
         {
             try { File.Delete(path); }
-            catch { } // best effort
+            catch {
+                // best effort
+            }
             path = null;
         }
     }

@@ -71,12 +71,47 @@ public class WindowsSpecific : IPlatformSpecific
         var startInfo = new ProcessStartInfo("ChroMapper.exe")
         {
             WorkingDirectory = Path.Combine(GetDownloadFolder(), "chromapper"),
-            Arguments = $"--launcher \"{Path.Combine(GetDownloadFolder(), AppDomain.CurrentDomain.FriendlyName)}\""
+            Arguments = $"--launcher \"{GetCMLPath()}\""
         };
 
         Process.Start(startInfo);
 
         Application.Exit();
+    }
+
+    public void Restart(string tmpFile)
+    {
+        // Overwrite us
+        var newExe = GetCMLPath();
+        var oldExe = GetTempCMLPath();
+        File.Move(newExe, oldExe);
+        File.Move(tmpFile, newExe);
+
+        // Run us
+        var startInfo = new ProcessStartInfo(AppDomain.CurrentDomain.FriendlyName)
+        {
+            WorkingDirectory = GetDownloadFolder()
+        };
+
+        Process.Start(startInfo);
+
+        Application.Exit();
+    }
+
+    public void CleanupUpdate()
+    {
+        try
+        {
+            var oldExe = GetTempCMLPath();
+            if (File.Exists(oldExe))
+            {
+                File.Delete(oldExe);
+            }
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
     }
 
     public string GetJenkinsFilename()
@@ -97,5 +132,20 @@ public class WindowsSpecific : IPlatformSpecific
     public string LocalFolderName()
     {
         return "chromapper";
+    }
+
+    public string GetCMLFilename()
+    {
+        return "CML.exe";
+    }
+
+    private string GetTempCMLPath()
+    {
+        return Path.Combine(GetDownloadFolder(), "CML.old.exe");
+    }
+
+    private string GetCMLPath()
+    {
+        return Path.Combine(GetDownloadFolder(), AppDomain.CurrentDomain.FriendlyName);
     }
 }

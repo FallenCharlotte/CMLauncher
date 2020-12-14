@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 public static class HttpClientExtensions
 {
+    public static HttpClient Setup(this HttpClient client)
+    {
+        client.Timeout = TimeSpan.FromMinutes(5);
+        client.DefaultRequestHeaders.Add("User-Agent", $"CML v{Config.APP_VERSION}");
+        return client;
+    }
+
     public static async Task DownloadAsync(this HttpClient client, string requestUri, Stream destination, IProgress<float> progress = null, CancellationToken cancellationToken = default)
     {
         // Get the http headers first to examine the content length

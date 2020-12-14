@@ -12,6 +12,8 @@ public interface IPlatformSpecific
 
     string GetCDNFilename();
 
+    string GetCMLFilename();
+
     string GetDownloadFolder();
 
     string LocalFolderName();
@@ -21,4 +23,8 @@ public interface IPlatformSpecific
     void UpdateProgress(float progress);
 
     void Exit();
+
+    void Restart(string tmpFile);
+
+    void CleanupUpdate();
 }

@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using BsDiff;
-using SharpCompress.Common;
+using Sentry;
 using SharpCompress.Readers;
 
 public class Main : IProgress<float>
@@ -28,9 +28,9 @@ public class Main : IProgress<float>
         new Thread(DoUpdate).Start();
     }
 
-    public async Task<int> GetLatestBuildNumber(ReleaseChannel releaseChannel)
+    private async Task<int> GetLatestBuildNumber(ReleaseChannel releaseChannel)
     {
-        using (var client = new HttpClient())
+        using (var client = new HttpClient().Setup())
         {
             var channel = releaseChannel == ReleaseChannel.Stable ? "stable" : "dev";
 
@@ -53,9 +53,18 @@ public class Main : IProgress<float>
     {
         try
         {
+            platformSpecific.CleanupUpdate();
+            await new UpdateManager(platformSpecific).CheckForUpdates();
+        }
+        catch (Exception e)
+        {
+            SentrySdk.CaptureException(e);
+        }
+
+        try {
             var version = platformSpecific.GetVersion();
-            int current = version.VersionNumber;
-            int desired = await GetLatestBuildNumber(useChannel);
+            var current = version.VersionNumber;
+            var desired = await GetLatestBuildNumber(useChannel);
 
             /*
              * Update if:
@@ -69,9 +78,9 @@ public class Main : IProgress<float>
                 return;
             }
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // ignored
+            SentrySdk.CaptureException(e);
         }
 
         platformSpecific.Exit();
@@ -79,7 +88,7 @@ public class Main : IProgress<float>
 
     private async void PerformUpdate(int current, int desired)
     {
-        int stable = await GetLatestBuildNumber(ReleaseChannel.Stable);
+        var stable = await GetLatestBuildNumber(ReleaseChannel.Stable);
         var version = platformSpecific.GetVersion();
 
         // Downgrade or first run
@@ -136,8 +145,9 @@ public class Main : IProgress<float>
                     current = await UpdateUsingPatch(current, patch);
                 }
             }
-            catch (AggregateException)
+            catch (AggregateException e)
             {
+                SentrySdk.CaptureException(e);
                 // Files are almost certainly between builds so
                 // require an update before running again
                 SetVersion(0);
@@ -155,7 +165,7 @@ public class Main : IProgress<float>
         var regex = new Regex(prefix + @"[0-9]+/([0-9]+).patch");
         var patches = new List<int>();
 
-        using (var client = new HttpClient())
+        using (var client = new HttpClient().Setup())
         {
             using (var response = await client.GetAsync($"{cdnUrl}?prefix={prefix}{desired}/"))
             {
@@ -218,10 +228,8 @@ public class Main : IProgress<float>
 
         using (var tmp = new TempFile())
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient().Setup())
             {
-                client.Timeout = TimeSpan.FromMinutes(5);
-
                 using (var file = new FileStream(tmp.Path, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     await client.DownloadAsync(downloadUrl, file, this);
@@ -242,12 +250,6 @@ public class Main : IProgress<float>
         Report(0);
 
         string destinationDirectoryFullPath = platformSpecific.GetDownloadFolder();
-
-        var opts = new ExtractionOptions()
-        {
-            Overwrite = true,
-            PreserveFileTime = true
-        };
 
         using (Stream stream = File.OpenRead(filename))
         {
@@ -286,10 +288,8 @@ public class Main : IProgress<float>
 
         using (var tmp = new TempFile())
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient().Setup())
             {
-                client.Timeout = TimeSpan.FromMinutes(5);
-
                 using (var file = new FileStream(tmp.Path, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     await client.DownloadAsync(downloadUrl, file, this);
