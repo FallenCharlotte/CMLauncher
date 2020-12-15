@@ -45,6 +45,11 @@ public class WindowsSpecific : IPlatformSpecific
         Guid localLowId = new Guid("A520A1A4-1780-4FF6-BD18-167343C5AF16");
         string cmSettingsPath = Path.Combine(GetKnownFolderPath(localLowId), "BinaryElement", "ChroMapper", "ChroMapperSettings.json");
 
+        if (!File.Exists(cmSettingsPath))
+        {
+            return new JSONObject();
+        }
+
         using (StreamReader reader = new StreamReader(cmSettingsPath))
         {
             return JSON.Parse(reader.ReadToEnd());

@@ -29,6 +29,11 @@ public class MacSpecific : IPlatformSpecific
         var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         string cmSettingsPath = Path.Combine(homeDir, "Library", "Application Support", "com.BinaryElement.ChroMapper", "ChroMapperSettings.json");
 
+        if (!File.Exists(cmSettingsPath))
+        {
+            return new JSONObject();
+        }
+
         using (StreamReader reader = new StreamReader(cmSettingsPath))
         {
             return JSON.Parse(reader.ReadToEnd());
