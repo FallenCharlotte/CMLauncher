@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -8,12 +9,41 @@ namespace CM_Launcher
     {
         private readonly SynchronizationContext synchronizationContext;
 
+        private static bool FilesLocked(IPlatformSpecific specific)
+        {
+            var file = Path.Combine(specific.GetDownloadFolder(), "chromapper", "ChroMapper.exe");
+            try
+            {
+                using (var stream = new FileStream(file, FileMode.Open, FileAccess.Write, FileShare.None))
+                {
+                    stream.Close();
+                }
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public Updater()
         {
             InitializeComponent();
             synchronizationContext = SynchronizationContext.Current;
 
-            new Main(new WindowsSpecific(this));
+            var specific = new WindowsSpecific(this);
+            if (FilesLocked(specific))
+            {
+                new Thread(() =>
+                {
+                    specific.Exit();
+                }).Start();
+            }
+            else
+            {
+                new Main(specific);
+            }
         }
 
         public void UpdateLabel(string text)

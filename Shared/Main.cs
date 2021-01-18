@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -172,12 +173,15 @@ public class Main : IProgress<float>
                 using (var content = response.Content)
                 {
                     var stream = await content.ReadAsStreamAsync();
-                    var xReader = XmlReader.Create(stream);
+                    var xReader = XmlReader.Create(stream, new XmlReaderSettings
+                    {
+                        Async = true
+                    });
 
                     while (xReader.ReadToFollowing("Contents"))
                     {
                         xReader.ReadToFollowing("Key");
-                        var str = xReader.ReadElementContentAsString();
+                        var str = await xReader.ReadElementContentAsStringAsync();
                         var matches = regex.Matches(str);
 
                         if (matches.Count > 0)
