@@ -14,9 +14,12 @@ namespace CM_Launcher
             var file = Path.Combine(specific.GetDownloadFolder(), "chromapper", "ChroMapper.exe");
             try
             {
-                using (var stream = new FileStream(file, FileMode.Open, FileAccess.Write, FileShare.None))
+                if (File.Exists(file))
                 {
-                    stream.Close();
+                    using (var stream = new FileStream(file, FileMode.Open, FileAccess.Write, FileShare.None))
+                    {
+                        stream.Close();
+                    }
                 }
             }
             catch (Exception)
