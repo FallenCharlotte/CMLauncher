@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 using Sentry;
+using Sentry.Protocol;
 
 namespace CM_Launcher
 {
@@ -18,6 +20,15 @@ namespace CM_Launcher
                 using (new Mutex(true, "CMLauncher", out var createdNew))
                 {
                     if (!createdNew) return;
+
+                    var identity = WindowsIdentity.GetCurrent();
+                    SentrySdk.ConfigureScope(scope =>
+                    {
+                        scope.User = new User
+                        {
+                            Username = identity.Name
+                        };
+                    });
 
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);

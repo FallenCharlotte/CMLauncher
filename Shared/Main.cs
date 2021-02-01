@@ -339,7 +339,7 @@ public class Main : IProgress<float>
                 if (compressionType == "xdelta")
                 {
                     byte[] oldFile = File.Exists(patchFilename) ? File.ReadAllBytes(patchFilename) : new byte[] { };
-                    newFile = xdelta3.ApplyPatch(memStream.ToArray(), oldFile);
+                    newFile = xdelta3.ApplyPatch(keyFilename, memStream.ToArray(), oldFile);
                 }
                 else if (compressionType == "bsdiff")
                 {
