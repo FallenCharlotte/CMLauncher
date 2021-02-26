@@ -14,7 +14,7 @@ public class xdelta3
     /// <param name="target">The target of the patch (the outcome of patching).</param>
     /// <param name="source">The source of the patch (what will be patched).</param>
     /// <returns>Xdelta3 patch data.</returns>
-    public static byte[] CreatePatch(byte[] target, byte[] source)
+    public static byte[] CreatePatch(string file, byte[] target, byte[] source)
     {
         byte[] obuf = new byte[MAX_BUFFER];
         UInt32 obufSize;
@@ -28,7 +28,7 @@ public class xdelta3
         // Check result
         if (result != 0)
         {
-            throw new xdelta3Exception(result);
+            throw new xdelta3Exception(result, file);
         }
 
         // Trim the output
@@ -44,7 +44,7 @@ public class xdelta3
     /// <param name="patch">xdelta3 patch data.</param>
     /// <param name="source">The data to be patched.</param>
     /// <returns>Patched data.</returns>
-    public static byte[] ApplyPatch(byte[] patch, byte[] source)
+    public static byte[] ApplyPatch(string file, byte[] patch, byte[] source)
     {
         byte[] obuf = new byte[MAX_BUFFER];
         UInt32 obufSize;
@@ -58,7 +58,7 @@ public class xdelta3
         // Check result
         if (result != 0)
         {
-            throw new xdelta3Exception(result);
+            throw new xdelta3Exception(result, file);
         }
 
         // Trim the output
@@ -100,11 +100,14 @@ public class xdelta3
 
 public class xdelta3Exception : Exception
 {
-    public int ExceptionCode { get; set; }
+    public int ExceptionCode { get; }
+    public string File { get; }
+    public override string Message => $"xdelta3Exception: Code {ExceptionCode} while patching {File}";
 
-    public xdelta3Exception(int rCode)
+    public xdelta3Exception(int rCode, string file)
     {
-        this.ExceptionCode = rCode;
+        ExceptionCode = rCode;
+        File = file;
     }
 }
 
