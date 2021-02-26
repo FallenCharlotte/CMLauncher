@@ -36,17 +36,21 @@ namespace CM_Launcher
             synchronizationContext = SynchronizationContext.Current;
 
             var specific = new WindowsSpecific(this);
-            if (FilesLocked(specific))
+            int tries = 0;
+            while (tries++ < 3)
             {
-                new Thread(() =>
+                if (!FilesLocked(specific))
                 {
-                    specific.Exit();
-                }).Start();
+                    new Main(specific);
+                    return;
+                }
+                Thread.Sleep(1000 * tries);
             }
-            else
+
+            new Thread(() =>
             {
-                new Main(specific);
-            }
+                specific.Exit();
+            }).Start();
         }
 
         public void UpdateLabel(string text)
