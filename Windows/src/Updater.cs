@@ -8,6 +8,7 @@ namespace CM_Launcher
     public partial class Updater : Form
     {
         private readonly SynchronizationContext synchronizationContext;
+        public static FormWindowState OriginalWindowState;
 
         private static bool FilesLocked(IPlatformSpecific specific)
         {
@@ -28,6 +29,13 @@ namespace CM_Launcher
             }
 
             return false;
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            OriginalWindowState = WindowState;
+            WindowState = FormWindowState.Normal;
+            base.OnLoad(e);
         }
 
         public Updater()

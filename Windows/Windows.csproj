@@ -132,6 +132,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\WinNativeHelpers\PropertyKey.cs" />
+    <Compile Include="src\WinNativeHelpers\PropVariant.cs" />
+    <Compile Include="src\WinNativeHelpers\PropVariantNativeMethods.cs" />
+    <Compile Include="src\WinNativeHelpers\ShellHelpers.cs" />
     <Compile Include="src\xdelta3.cs" />
     <Compile Include="src\Updater.cs">
       <SubType>Form</SubType>

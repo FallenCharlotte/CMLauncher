@@ -73,10 +73,21 @@ public class WindowsSpecific : IPlatformSpecific
 
     public void Exit()
     {
+        var cmWindowStyle = ProcessWindowStyle.Normal;
+        if (Updater.OriginalWindowState == FormWindowState.Maximized)
+        {
+            cmWindowStyle = ProcessWindowStyle.Maximized;
+        }
+        else if (Updater.OriginalWindowState == FormWindowState.Minimized)
+        {
+            cmWindowStyle = ProcessWindowStyle.Minimized;
+        }
+
         var startInfo = new ProcessStartInfo("ChroMapper.exe")
         {
             WorkingDirectory = Path.Combine(GetDownloadFolder(), "chromapper"),
-            Arguments = $"--launcher \"{GetCMLPath()}\""
+            Arguments = $"--launcher \"{GetCMLPath()}\"",
+            WindowStyle = cmWindowStyle
         };
 
         Process.Start(startInfo);
