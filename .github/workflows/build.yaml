@@ -24,3 +24,26 @@ jobs:
       with:
         name: CML
         path: Windows/bin/Release/CML.exe
+  build-osx:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
+
+    - name: Restore NuGet Packages
+      run: nuget restore "CM Launcher.sln"
+
+    - name: Build CML
+      working-directory: ./OSX
+      run: |
+        dotnet build --configuration Release
+        mv "bin/Release/CM Launcher.app" "bin/Release/CML.app"
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: CML
+        path: OSX/bin/Release/CML.app
