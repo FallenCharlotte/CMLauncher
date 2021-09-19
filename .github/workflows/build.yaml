@@ -2,7 +2,6 @@ name: Build
 on: [push]
 jobs:
   build:
-    if: ${{ false }}
     runs-on: windows-latest
     
     steps:
@@ -19,12 +18,14 @@ jobs:
       working-directory: ./Windows
       run: |
         dotnet build --configuration Release
-        mv "bin/Release/CM Launcher.exe" "bin/Release/CML.exe"
+        mv "bin/Release/CM Launcher.exe" "bin/Release/CML2.exe"
 
-    - uses: actions/upload-artifact@v2
+    - id: upload-file
+      uses: google-github-actions/upload-cloud-storage@main
       with:
-        name: CML
-        path: Windows/bin/Release/CML.exe
+        credentials: ${{ secrets.gcp_credentials }}
+        path: Windows/bin/Release/CML2.exe
+        destination: chromapper
   build-osx:
     runs-on: macos-latest
 
@@ -55,4 +56,4 @@ jobs:
       with:
         credentials: ${{ secrets.gcp_credentials }}
         path: CML2.app.zip
-        destination: chromapper/CML2.app.zip
+        destination: chromapper
