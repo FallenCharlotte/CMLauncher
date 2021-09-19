@@ -11,6 +11,9 @@ jobs:
       with:
         dotnet-version: '3.1.x'
 
+    - name: Restore NuGet Packages
+      run: nuget restore "CM Launcher.sln"
+
     - name: Build CML
       working-directory: ./Windows
       run: |
