@@ -2,6 +2,7 @@ name: Build
 on: [push]
 jobs:
   build:
+    if: ${{ false }}
     runs-on: windows-latest
     
     steps:
@@ -30,9 +31,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '3.1.x'
+    - uses: maxim-lobanov/setup-xamarin@v1
 
     - name: Restore NuGet Packages
       run: nuget restore "CM Launcher.sln"
