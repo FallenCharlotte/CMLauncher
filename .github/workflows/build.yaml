@@ -45,7 +45,14 @@ jobs:
       run: |
         msbuild /property:Configuration=Release
 
-    - uses: actions/upload-artifact@v2
+    - uses: papeloto/action-zip@v1
       with:
-        name: CML
-        path: OSX/bin/Release/CML.app
+        files: OSX/bin/Release/CML.app
+        dest: CML2.app.zip
+
+    - id: upload-file
+      uses: google-github-actions/upload-cloud-storage@main
+      with:
+        credentials: ${{ secrets.gcp_credentials }}
+        path: CML2.app.zip
+        destination: chromapper/CML2.app.zip
