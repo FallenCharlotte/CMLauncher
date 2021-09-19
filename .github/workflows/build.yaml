@@ -14,8 +14,7 @@ jobs:
       uses: nuget/setup-nuget@v1
      
     - name: Restore NuGet Packages
-      working-directory: ./Windows
-      run: nuget restore
+      run: nuget restore "CM Launcher.sln"
 
     - name: Build CML
       working-directory: ./Windows
