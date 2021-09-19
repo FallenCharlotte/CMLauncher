@@ -43,7 +43,7 @@ jobs:
     - name: Build CML
       working-directory: ./OSX
       run: |
-        dotnet build --configuration Release
+        dotnet build --configuration Release /p:MSBuildExtensionsPath=/Library/Frameworks/Mono.framework/External/xbuild
         mv "bin/Release/CM Launcher.app" "bin/Release/CML.app"
 
     - uses: actions/upload-artifact@v2
