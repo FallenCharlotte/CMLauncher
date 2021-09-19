@@ -18,9 +18,9 @@ jobs:
       working-directory: ./Windows
       run: |
         dotnet build --configuration Release
-        mv "Windows/bin/Release/CM Launcher.exe" CML.exe
+        mv "bin/Release/CM Launcher.exe" "bin/Release/CML.exe"
 
     - uses: actions/upload-artifact@v2
       with:
         name: CML
-        path: CML.exe
+        path: Windows/bin/Release/CML.exe
