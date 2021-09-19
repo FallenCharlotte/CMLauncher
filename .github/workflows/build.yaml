@@ -60,6 +60,7 @@ jobs:
         credentials: ${{ secrets.gcp_credentials }}
         path: CML2.app.zip
         destination: chromapper
+        gzip: false
   update-version:
     runs-on: ubuntu-latest
     needs: [build-osx, build-win]
@@ -75,3 +76,4 @@ jobs:
         credentials: ${{ secrets.gcp_credentials }}
         path: cml2
         destination: chromapper
+        gzip: false
