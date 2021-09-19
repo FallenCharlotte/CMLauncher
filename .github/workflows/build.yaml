@@ -7,20 +7,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Setup MSBuild Path
-      uses: microsoft/setup-msbuild@v1.0.3
-       
-    - name: Setup NuGet
-      uses: nuget/setup-nuget@v1
-     
-    - name: Restore NuGet Packages
-      run: nuget restore "CM Launcher.sln"
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
 
     - name: Build CML
       working-directory: ./Windows
-      run: dotnet build --configuration Release
+      run: |
+        dotnet build --configuration Release
+        mv "Windows/bin/Release/CM Launcher.exe" CML.exe
 
     - uses: actions/upload-artifact@v2
       with:
-        name: CML.exe
-        path: Windows/bin/Release/CM Launcher.exe
+        name: CML
+        path: CML.exe
