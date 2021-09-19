@@ -67,7 +67,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Write version file
-      run: grep -Po 'APP_VERSION = \K[0-9]+' Shared/Config.cs > cml2
+      run: grep -Po 'APP_VERSION = \K[0-9]+' Shared/Config.cs | tr -d '\n' > cml2
 
     - id: upload-file
       uses: google-github-actions/upload-cloud-storage@main
