@@ -1,0 +1,27 @@
+name: Build
+on: [push]
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup MSBuild Path
+      uses: warrenbuckley/Setup-MSBuild@v1
+       
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.0.2
+     
+    - name: Restore NuGet Packages
+      working-directory: ./Windows
+      run: nuget restore
+
+    - name: Build CML
+      working-directory: ./Windows
+      run: dotnet build --configuration Release
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: CML.exe
+        path: Windows/bin/Release/CM Launcher.exe
