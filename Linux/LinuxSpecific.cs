@@ -50,7 +50,7 @@ public class LinuxSpecific : IPlatformSpecific
 
     private static void RewriteLine(int lineNumber, string newText)
     {
-        newText = newText.Substring(0, Console.WindowWidth);
+        newText = newText.Substring(0, Math.Min(newText.Length, Console.WindowWidth));
 
         var currentLineCursor = Console.CursorTop;
         Console.SetCursorPosition(0, currentLineCursor - lineNumber);
