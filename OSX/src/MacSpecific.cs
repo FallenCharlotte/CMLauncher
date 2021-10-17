@@ -45,6 +45,8 @@ public class MacSpecific : IPlatformSpecific
         return "osx/";
     }
 
+    public bool UseCDN() => true;
+
     public void UpdateLabel(string label)
     {
         NSApplication.SharedApplication.InvokeOnMainThread(() =>

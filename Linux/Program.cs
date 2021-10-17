@@ -57,7 +57,7 @@ namespace Linux
                         WriteResourceToFile("Linux.Costura32.xdelta3.so", "xdelta3.so");
                     }
 
-                    var specific = new LinuxSpecific();
+                    var specific = new LinuxSpecific(args);
                     int tries = 0;
                     while (tries++ < 3)
                     {

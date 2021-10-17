@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using CM_Launcher;
@@ -8,11 +9,13 @@ using SimpleJSON;
 
 public class WindowsSpecific : IPlatformSpecific
 {
-    private readonly Updater updater;
+    private readonly Updater _updater;
+    private readonly string[] _args;
 
-    public WindowsSpecific(Updater updater)
+    public WindowsSpecific(Updater updater, string[] args)
     {
-        this.updater = updater;
+        _updater = updater;
+        _args = args;
     }
 
     public IVersion GetVersion()
@@ -56,19 +59,18 @@ public class WindowsSpecific : IPlatformSpecific
         }
     }
 
-    public string GetCDNPrefix()
-    {
-        return "win/";
-    }
+    public string GetCDNPrefix() => "win/";
+
+    public bool UseCDN() => !_args.Any(x => x.Equals("--no-cdn"));
 
     public void UpdateLabel(string label)
     {
-        updater.UpdateLabel(label);
+        _updater.UpdateLabel(label);
     }
 
     public void UpdateProgress(float progress)
     {
-        updater.Report(progress);
+        _updater.Report(progress);
     }
 
     public void Exit()
@@ -83,10 +85,12 @@ public class WindowsSpecific : IPlatformSpecific
             cmWindowStyle = ProcessWindowStyle.Minimized;
         }
 
+        var passthroughArgs = _args.Length == 0 ? "" : (" " + string.Join(" ", _args));
+
         var startInfo = new ProcessStartInfo("ChroMapper.exe")
         {
             WorkingDirectory = Path.Combine(GetDownloadFolder(), "chromapper"),
-            Arguments = $"--launcher \"{GetCMLPath()}\"",
+            Arguments = $"--launcher \"{GetCMLPath()}\"" + passthroughArgs,
             WindowStyle = cmWindowStyle
         };
 
@@ -130,38 +134,20 @@ public class WindowsSpecific : IPlatformSpecific
         }
     }
 
-    public string GetJenkinsFilename()
-    {
-        return "ChroMapper-Win64.zip";
-    }
+    public string GetJenkinsFilename() => "ChroMapper-Win64.zip";
 
-    public string GetCDNFilename()
-    {
-        return "Win64.zip";
-    }
+    public string GetCDNFilename() => "Win64.zip";
 
     public string GetDownloadFolder()
     {
         return AppDomain.CurrentDomain.BaseDirectory;
     }
 
-    public string LocalFolderName()
-    {
-        return "chromapper";
-    }
+    public string LocalFolderName() => "chromapper";
 
-    public string GetCMLFilename()
-    {
-        return "CML.exe";
-    }
+    public string GetCMLFilename() => "CML.exe";
 
-    private string GetTempCMLPath()
-    {
-        return Path.Combine(GetDownloadFolder(), "CML.old.exe");
-    }
+    private string GetTempCMLPath() => Path.Combine(GetDownloadFolder(), "CML.old.exe");
 
-    private string GetCMLPath()
-    {
-        return Path.Combine(GetDownloadFolder(), AppDomain.CurrentDomain.FriendlyName);
-    }
+    private string GetCMLPath() => Path.Combine(GetDownloadFolder(), AppDomain.CurrentDomain.FriendlyName);
 }

@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Mime;
 using System.Runtime.InteropServices;
 using System.Threading;
 using SimpleJSON;
 
 public class LinuxSpecific : IPlatformSpecific
 {
-    public LinuxSpecific() {}
+    private readonly string[] _args;
+
+    public LinuxSpecific(string[] args)
+    {
+        _args = args;
+    }
 
     public IVersion GetVersion()
     {
@@ -37,11 +41,18 @@ public class LinuxSpecific : IPlatformSpecific
         return "nix/";
     }
 
+    public bool UseCDN()
+    {
+        return true;
+    }
+
     private ProgressBar _progressBar;
 
-    public static void RewriteLine(int lineNumber, String newText)
+    private static void RewriteLine(int lineNumber, string newText)
     {
-        int currentLineCursor = Console.CursorTop;
+        newText = newText.Substring(0, Console.WindowWidth);
+
+        var currentLineCursor = Console.CursorTop;
         Console.SetCursorPosition(0, currentLineCursor - lineNumber);
         Console.Write(newText); Console.WriteLine(new string(' ', Console.WindowWidth - newText.Length)); 
         Console.SetCursorPosition(0, currentLineCursor);
@@ -95,10 +106,12 @@ public class LinuxSpecific : IPlatformSpecific
         var exeFile = Path.Combine(GetDownloadFolder(), "chromapper", "ChroMapper");
         chmod(exeFile, 0x1 | 0x4 | 0x8 | 0x20 | 0x40 | 0x80 | 0x100);
 
+        var passthroughArgs = _args.Length == 0 ? "" : (" " + string.Join(" ", _args));
+
         var startInfo = new ProcessStartInfo(exeFile)
         {
             WorkingDirectory = Path.Combine(GetDownloadFolder(), "chromapper"),
-            Arguments = $"--launcher \"{GetCMLPath()}\"",
+            Arguments = $"--launcher \"{GetCMLPath()}\"" + passthroughArgs,
             WindowStyle = cmWindowStyle
         };
 
