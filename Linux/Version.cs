@@ -11,14 +11,14 @@ class Version : IVersion
     private readonly string versionFilename;
     private static Version _version;
 
-    public static Version GetVersion()
+    public static Version GetVersion(string path)
     {
-        return _version ?? (_version = new Version());
+        return _version ?? (_version = new Version(path));
     }
 
-    private Version()
+    private Version(string path)
     {
-        versionFilename = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cm-version");
+        versionFilename = Path.Combine(path, "cm-version");
 
         if (!File.Exists(versionFilename)) return;
 

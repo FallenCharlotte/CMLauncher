@@ -16,7 +16,7 @@ public class LinuxSpecific : IPlatformSpecific
 
     public IVersion GetVersion()
     {
-        return Version.GetVersion();
+        return Version.GetVersion(GetDownloadFolder());
     }
 
     public JSONNode GetCMConfig()
@@ -53,9 +53,14 @@ public class LinuxSpecific : IPlatformSpecific
         newText = newText.Substring(0, Math.Min(newText.Length, Console.WindowWidth));
 
         var currentLineCursor = Console.CursorTop;
-        Console.SetCursorPosition(0, currentLineCursor - lineNumber);
-        Console.Write(newText); Console.WriteLine(new string(' ', Console.WindowWidth - newText.Length)); 
-        Console.SetCursorPosition(0, currentLineCursor);
+        if (currentLineCursor - lineNumber > 0) {
+            Console.SetCursorPosition(0, currentLineCursor - lineNumber);
+            Console.Write(newText); Console.WriteLine(new string(' ', Console.WindowWidth - newText.Length));
+            Console.SetCursorPosition(0, currentLineCursor);
+        }
+        else {
+            Console.WriteLine(newText);
+        }
     }
     
     public void UpdateLabel(string label)
@@ -167,7 +172,7 @@ public class LinuxSpecific : IPlatformSpecific
 
     public string GetDownloadFolder()
     {
-        return AppDomain.CurrentDomain.BaseDirectory;
+        return System.AppContext.BaseDirectory;
     }
 
     public string LocalFolderName()
