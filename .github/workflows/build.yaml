@@ -76,7 +76,7 @@ jobs:
         dotnet publish -c Release --sc -r linux-x64
     
     - id: upload-file
-      uses:actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3
       with:
         name: CML-Linux
         path: Linux/bin/Release/net6.0/linux-x64/publish/CML-Linux
