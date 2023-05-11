@@ -8,6 +8,8 @@ public interface IPlatformSpecific
 
     string GetCDNPrefix();
 
+    bool UseCDN();
+
     string GetJenkinsFilename();
 
     string GetCDNFilename();

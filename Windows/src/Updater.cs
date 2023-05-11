@@ -38,12 +38,12 @@ namespace CM_Launcher
             base.OnLoad(e);
         }
 
-        public Updater()
+        public Updater(string[] args)
         {
             InitializeComponent();
             synchronizationContext = SynchronizationContext.Current;
 
-            var specific = new WindowsSpecific(this);
+            var specific = new WindowsSpecific(this, args);
             int tries = 0;
             while (tries++ < 3)
             {

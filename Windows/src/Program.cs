@@ -64,7 +64,7 @@ namespace CM_Launcher
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        private static void Main()
+        private static void Main(string[] args)
         {
             using (SentrySdk.Init("https://76dcf1f2484f4839a78b3713420b5147@o462013.ingest.sentry.io/5556322"))
             {
@@ -86,7 +86,7 @@ namespace CM_Launcher
 
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
-                    Application.Run(new Updater());
+                    Application.Run(new Updater(args));
                 }
             }
         }
