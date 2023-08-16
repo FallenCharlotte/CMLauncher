@@ -23,7 +23,7 @@ public class Main : IProgress<float>
         this.platformSpecific = platformSpecific;
 
         var mainNode = platformSpecific.GetCMConfig();
-        useChannel = mainNode["ReleaseChannel"].Value == "0" ? ReleaseChannel.Stable : ReleaseChannel.Dev;
+        useChannel = mainNode["ReleaseChannel"].Value == "1" ? ReleaseChannel.Dev : ReleaseChannel.Stable;
         cdnUrl = mainNode.HasKey("ReleaseServer") ? mainNode["ReleaseServer"].Value : Config.CDN_URL;
 
         new Thread(DoUpdate).Start();
