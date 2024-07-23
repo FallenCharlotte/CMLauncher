@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Windows.Forms;
 using CM_Launcher;
 using SimpleJSON;
@@ -75,6 +76,13 @@ public class WindowsSpecific : IPlatformSpecific
 
     public void Exit()
     {
+        // Don't run CM as admin, return to unprivileged
+        if (IsAdministrator())
+        {
+            Application.Exit();
+            return;
+        }
+
         var cmWindowStyle = ProcessWindowStyle.Normal;
         if (Updater.OriginalWindowState == FormWindowState.Maximized)
         {
@@ -110,12 +118,36 @@ public class WindowsSpecific : IPlatformSpecific
         // Run us
         var startInfo = new ProcessStartInfo(AppDomain.CurrentDomain.FriendlyName)
         {
+            Arguments = string.Join(" ", _args),
             WorkingDirectory = GetDownloadFolder()
         };
 
         Process.Start(startInfo);
 
         Application.Exit();
+    }
+
+    public static bool IsAdministrator()
+    {
+        var identity = WindowsIdentity.GetCurrent();
+        var principal = new WindowsPrincipal(identity);
+        return principal.IsInRole(WindowsBuiltInRole.Administrator);
+    }
+
+    public void StartAsAdmin()
+    {
+        var startInfo = new ProcessStartInfo(AppDomain.CurrentDomain.FriendlyName)
+        {
+            WorkingDirectory = GetDownloadFolder(),
+            UseShellExecute = true,
+            Verb = "runas"
+        };
+
+        var process = Process.Start(startInfo);
+        if (process == null) return;
+
+        process.WaitForExit();
+        process.Close();
     }
 
     public void CleanupUpdate()

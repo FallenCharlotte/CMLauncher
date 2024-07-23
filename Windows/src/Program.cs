@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
@@ -68,27 +69,40 @@ namespace CM_Launcher
         {
             using (SentrySdk.Init("https://76dcf1f2484f4839a78b3713420b5147@o462013.ingest.sentry.io/5556322"))
             {
-                using (new Mutex(true, "CMLauncher", out var createdNew))
+                var identity = WindowsIdentity.GetCurrent();
+                SentrySdk.ConfigureScope(scope =>
                 {
-                    if (!createdNew) return;
-
-                    var identity = WindowsIdentity.GetCurrent();
-                    SentrySdk.ConfigureScope(scope =>
+                    scope.User = new User
                     {
-                        scope.User = new User
-                        {
-                            Username = identity.Name
-                        };
-                    });
+                        Username = identity.Name
+                    };
+                });
 
-                    SetCurrentProcessExplicitAppUserModelID(CmExeName);
-                    UpdatePinnedTaskBarElements();
+                var isAdmin = WindowsSpecific.IsAdministrator();
+                if (isAdmin)
+                {
+                    LaunchApp(args, true);
+                }
+                else
+                {
+                    using (new Mutex(true, "CMLauncher", out var createdNew))
+                    {
+                        if (!createdNew) return;
 
-                    Application.EnableVisualStyles();
-                    Application.SetCompatibleTextRenderingDefault(false);
-                    Application.Run(new Updater(args));
+                        SetCurrentProcessExplicitAppUserModelID(CmExeName);
+                        UpdatePinnedTaskBarElements();
+
+                        LaunchApp(args, false);
+                    }
                 }
             }
+        }
+
+        private static void LaunchApp(string[] args, bool isAdmin)
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Updater(args, isAdmin));
         }
     }
 }
