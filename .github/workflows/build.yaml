@@ -27,7 +27,7 @@ jobs:
         path: Windows/bin/Release/CML2.exe
         destination: chromapper
   build-osx:
-    runs-on: macos-13
+    runs-on: macos-12
 
     steps:
     - uses: actions/checkout@v2
