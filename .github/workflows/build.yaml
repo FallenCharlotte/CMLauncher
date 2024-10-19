@@ -27,7 +27,7 @@ jobs:
         path: Windows/bin/Release/CML2.exe
         destination: chromapper
   build-osx:
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v2
@@ -55,12 +55,10 @@ jobs:
         dest: CML2.app.zip
 
     - id: upload-file
-      uses: google-github-actions/upload-cloud-storage@main
+      uses: actions/upload-artifact@v3
       with:
-        credentials: ${{ secrets.gcp_credentials }}
+        Name: CML.app.zip
         path: CML2.app.zip
-        destination: chromapper
-        gzip: false
   build-linux:
     runs-on: ubuntu-latest
     
@@ -79,12 +77,10 @@ jobs:
         dotnet publish -c Release --sc -r linux-x64
     
     - id: upload-file
-      uses: google-github-actions/upload-cloud-storage@main
+      uses: actions/upload-artifact@v3
       with:
-        credentials: ${{ secrets.gcp_credentials }}
+        name: CML-Linux
         path: Linux/bin/Release/net6.0/linux-x64/publish/CML-Linux
-        destination: chromapper
-        gzip: false
 
   update-version:
     runs-on: ubuntu-latest
