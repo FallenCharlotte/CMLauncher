@@ -69,16 +69,16 @@ public class MacSpecific : IPlatformSpecific
         var startInfo = new ProcessStartInfo()
         {
             FileName = "/bin/bash",
-            Arguments = $"-c \"chmod +x /Applications/ChroMapper.app/Contents/MacOS/ChroMapper\"",
+            Arguments = $"-c \"chmod +x {GetDownloadFolder()}/ChroMapper.app/Contents/MacOS/ChroMapper\"",
 
             CreateNoWindow = true
         };
         Process.Start(startInfo).WaitForExit();
 
-        var startInfo2 = new ProcessStartInfo("/Applications/ChroMapper.app/Contents/MacOS/ChroMapper")
+        var startInfo2 = new ProcessStartInfo($"{GetDownloadFolder()}/ChroMapper.app/Contents/MacOS/ChroMapper")
         {
-            WorkingDirectory = "/Applications",
-            Arguments = $"--launcher \"{Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.FriendlyName)}\""
+            WorkingDirectory = GetDownloadFolder(),
+            Arguments = $"--launcher \"{AppDomain.CurrentDomain.BaseDirectory}/../MacOS/CML\""
         };
 
         Process.Start(startInfo2);
@@ -101,7 +101,8 @@ public class MacSpecific : IPlatformSpecific
 
     public string GetDownloadFolder()
     {
-        return "/Applications";
+        var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return $"{homeDir}/Applications";
     }
 
     public string LocalFolderName()
